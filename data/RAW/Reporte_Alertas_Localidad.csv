@@ -1,0 +1,21 @@
+﻿COD_LOCALIDAD,NOMBRE_LOCALIDAD,PERIODO,NIVEL_ALERTA,NUM_DESERCION,TASA_DESERCION,NUM_REPITENCIA,DESCRIPCION_ALERTA
+1,USAQUÉN,2025-1,MEDIO,1570,9.72,24,"Condiciones estables, monitoreo preventivo"
+2,CHAPINERO,2025-1,BAJO,531,6.55,220,"Condiciones estables, monitoreo preventivo"
+3,SANTA FE,2025-1,CRÍTICO,1089,5.78,57,Incremento de repitencia en básica secundaria
+4,SAN CRISTÓBAL,2025-1,CRÍTICO,866,2.09,925,Alertas por situación socioeconómica crítica
+5,USME,2025-1,BAJO,1564,12.07,299,Incremento de repitencia en básica secundaria
+6,TUNJUELITO,2025-1,ALTO,1547,10.92,762,Brecha significativa en acceso a educación superior
+7,BOSA,2025-1,CRÍTICO,1385,4.85,113,Incremento de repitencia en básica secundaria
+8,KENNEDY,2025-1,BAJO,878,9.08,249,Alertas por situación socioeconómica crítica
+9,FONTIBÓN,2025-1,CRÍTICO,1714,11.77,840,Riesgo de deserción por desplazamiento
+10,ENGATIVÁ,2025-1,MEDIO,188,11.26,695,"Condiciones estables, monitoreo preventivo"
+11,SUBA,2025-1,BAJO,1072,5.18,288,Brecha significativa en acceso a educación superior
+12,BARRIOS UNIDOS,2025-1,ALTO,1319,6.02,533,"Condiciones estables, monitoreo preventivo"
+13,TEUSAQUILLO,2025-1,ALTO,619,7.3,563,Alertas por situación socioeconómica crítica
+14,LOS MÁRTIRES,2025-1,BAJO,890,11.22,144,"Condiciones estables, monitoreo preventivo"
+15,ANTONIO NARIÑO,2025-1,ALTO,1461,8.12,244,Riesgo de deserción por desplazamiento
+16,PUENTE ARANDA,2025-1,BAJO,1311,1.75,439,Riesgo de deserción por desplazamiento
+17,LA CANDELARIA,2025-1,ALTO,700,8.94,620,Riesgo de deserción por desplazamiento
+18,RAFAEL URIBE URIBE,2025-1,MEDIO,147,5.73,445,Brecha significativa en acceso a educación superior
+19,CIUDAD BOLÍVAR,2025-1,CRÍTICO,523,3.16,708,Brecha significativa en acceso a educación superior
+20,SUMAPAZ,2025-1,ALTO,1324,3.56,52,Alertas por situación socioeconómica crítica
