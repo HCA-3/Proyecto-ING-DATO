@@ -2,10 +2,12 @@
 """
 generar_documento_integrado_apa7.py
 
-Genera el 'Documento Integrado del Proyecto.docx' (Manual Técnico, Fundamentación
-Teórica de los Cortes 1, 2 y 3, Explicación de Código con Evidencias, Aportes
-Individuales Argumentados y Manual de Usuario) aplicando estrictamente las
-Normas APA (7.ª edición).
+Genera el 'Documento Integrado del Proyecto.docx' y su respectivo PDF con:
+  - Fuente Arial 12 pt en todo el documento
+  - Texto justificado (excepto portada y títulos Nivel 1 centrados, títulos Nivel 2/3 y bloques de código alineados a la izquierda)
+  - Todo el texto y bordes estrictamente en color negro (#000000) sobre fondo blanco (únicamente las imágenes conservan color)
+  - Todas las tablas con todos sus bordes completos (exteriores e interiores) en negro
+  - Cero guiones largos ("—") en todo el documento
 """
 
 import os
@@ -21,9 +23,13 @@ FIGS_DIR  = os.path.join(BASE_REPO, "data", "ANALYTICS", "figuras")
 WORKSPACE_DOCS = r"c:\Users\dsant\Desktop\U CATOLICA\Programas\Data\Documentos"
 
 BLACK = RGBColor(0, 0, 0)
-DARK_SLATE = RGBColor(15, 23, 42)
-CODE_BG = "F8FAFC"
-BOX_BG = "EFF6FF"
+FONT_NAME = "Arial"
+FONT_SIZE = Pt(12)
+
+
+def limpiar_guiones(texto: str) -> str:
+    """Garantiza que no exista ningún guion largo '—' ni '–' en el texto."""
+    return texto.replace(" — ", ", ").replace("—", "-").replace(" – ", " a ").replace("–", "-")
 
 
 def set_cell_margins(cell, top=80, bottom=80, left=110, right=110):
@@ -37,53 +43,18 @@ def set_cell_margins(cell, top=80, bottom=80, left=110, right=110):
     tcPr.append(tcMar)
 
 
-def set_cell_bg(cell, fill_hex):
-    tcPr = cell._tc.get_or_add_tcPr()
-    shd = OxmlElement("w:shd")
-    shd.set(qn("w:val"), "clear")
-    shd.set(qn("w:color"), "auto")
-    shd.set(qn("w:fill"), fill_hex)
-    tcPr.append(shd)
-
-
-def set_apa_table_borders(table):
-    """
-    Aplica bordes de tabla según Normas APA 7.ª edición:
-    - Línea horizontal superior en el encabezado
-    - Línea horizontal inferior en el encabezado
-    - Línea horizontal inferior al final de la tabla
-    - Sin bordes verticales ni bordes internos entre filas de datos
-    """
+def set_full_black_table_borders(table):
+    """Aplica todos los bordes (top, bottom, left, right, insideH, insideV) en color negro."""
     tblPr = table._tbl.tblPr
     borders = OxmlElement("w:tblBorders")
-    for b_name, val, sz in [
-        ("top", "single", "12"),
-        ("bottom", "single", "12"),
-        ("left", "none", "0"),
-        ("right", "none", "0"),
-        ("insideH", "none", "0"),
-        ("insideV", "none", "0"),
-    ]:
+    for b_name in ["top", "bottom", "left", "right", "insideH", "insideV"]:
         b = OxmlElement(f"w:{b_name}")
-        b.set(qn("w:val"), val)
-        b.set(qn("w:sz"), sz)
+        b.set(qn("w:val"), "single")
+        b.set(qn("w:sz"), "6")
         b.set(qn("w:space"), "0")
         b.set(qn("w:color"), "000000")
         borders.append(b)
     tblPr.append(borders)
-
-
-def set_row_bottom_border(row, sz="8"):
-    for cell in row.cells:
-        tcPr = cell._tc.get_or_add_tcPr()
-        tcBorders = OxmlElement("w:tcBorders")
-        bottom = OxmlElement("w:bottom")
-        bottom.set(qn("w:val"), "single")
-        bottom.set(qn("w:sz"), sz)
-        bottom.set(qn("w:space"), "0")
-        bottom.set(qn("w:color"), "000000")
-        tcBorders.append(bottom)
-        tcPr.append(tcBorders)
 
 
 def add_page_number_to_header(section):
@@ -91,8 +62,9 @@ def add_page_number_to_header(section):
     p = header.paragraphs[0]
     p.alignment = WD_ALIGN_PARAGRAPH.RIGHT
     run = p.add_run()
-    run.font.name = "Times New Roman"
-    run.font.size = Pt(12)
+    run.font.name = FONT_NAME
+    run.font.size = FONT_SIZE
+    run.font.color.rgb = BLACK
     fldChar1 = OxmlElement("w:fldChar")
     fldChar1.set(qn("w:fldCharType"), "begin")
     instrText = OxmlElement("w:instrText")
@@ -110,6 +82,7 @@ def add_page_number_to_header(section):
 
 
 def add_apa_heading(doc, text, level=1):
+    text = limpiar_guiones(text)
     p = doc.add_paragraph()
     p.paragraph_format.space_before = Pt(12)
     p.paragraph_format.space_after = Pt(6)
@@ -118,22 +91,22 @@ def add_apa_heading(doc, text, level=1):
     if level == 1:
         p.alignment = WD_ALIGN_PARAGRAPH.CENTER
         r = p.add_run(text)
-        r.font.name = "Times New Roman"
-        r.font.size = Pt(12)
+        r.font.name = FONT_NAME
+        r.font.size = FONT_SIZE
         r.font.bold = True
         r.font.color.rgb = BLACK
     elif level == 2:
         p.alignment = WD_ALIGN_PARAGRAPH.LEFT
         r = p.add_run(text)
-        r.font.name = "Times New Roman"
-        r.font.size = Pt(12)
+        r.font.name = FONT_NAME
+        r.font.size = FONT_SIZE
         r.font.bold = True
         r.font.color.rgb = BLACK
     else:
         p.alignment = WD_ALIGN_PARAGRAPH.LEFT
         r = p.add_run(text)
-        r.font.name = "Times New Roman"
-        r.font.size = Pt(12)
+        r.font.name = FONT_NAME
+        r.font.size = FONT_SIZE
         r.font.bold = True
         r.font.italic = True
         r.font.color.rgb = BLACK
@@ -141,128 +114,148 @@ def add_apa_heading(doc, text, level=1):
 
 
 def add_apa_paragraph(doc, text, indent=True, bold_prefix=None):
+    text = limpiar_guiones(text)
     p = doc.add_paragraph()
-    p.alignment = WD_ALIGN_PARAGRAPH.LEFT
+    p.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
     p.paragraph_format.line_spacing = 1.5
     p.paragraph_format.space_before = Pt(0)
     p.paragraph_format.space_after = Pt(6)
     p.paragraph_format.first_line_indent = Inches(0.5) if indent else Inches(0)
     if bold_prefix:
+        bold_prefix = limpiar_guiones(bold_prefix)
         rb = p.add_run(bold_prefix)
-        rb.font.name = "Times New Roman"
-        rb.font.size = Pt(12)
+        rb.font.name = FONT_NAME
+        rb.font.size = FONT_SIZE
         rb.font.bold = True
         rb.font.color.rgb = BLACK
     r = p.add_run(text)
-    r.font.name = "Times New Roman"
-    r.font.size = Pt(12)
+    r.font.name = FONT_NAME
+    r.font.size = FONT_SIZE
     r.font.color.rgb = BLACK
     return p
 
 
 def add_apa_bullet(doc, bold_lead, text):
+    text = limpiar_guiones(text)
     p = doc.add_paragraph(style="List Bullet")
+    p.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
     p.paragraph_format.line_spacing = 1.5
     p.paragraph_format.space_before = Pt(0)
     p.paragraph_format.space_after = Pt(4)
     if bold_lead:
+        bold_lead = limpiar_guiones(bold_lead)
         rb = p.add_run(bold_lead)
-        rb.font.name = "Times New Roman"
-        rb.font.size = Pt(12)
+        rb.font.name = FONT_NAME
+        rb.font.size = FONT_SIZE
         rb.font.bold = True
         rb.font.color.rgb = BLACK
     r = p.add_run(text)
-    r.font.name = "Times New Roman"
-    r.font.size = Pt(12)
+    r.font.name = FONT_NAME
+    r.font.size = FONT_SIZE
     r.font.color.rgb = BLACK
     return p
 
 
 def add_apa_table(doc, num, title, headers, rows, note_text):
-    # Número de tabla en negrita (APA 7)
+    title = limpiar_guiones(title)
+    note_text = limpiar_guiones(note_text)
+
     p_num = doc.add_paragraph()
+    p_num.alignment = WD_ALIGN_PARAGRAPH.LEFT
     p_num.paragraph_format.space_before = Pt(10)
     p_num.paragraph_format.space_after = Pt(2)
     p_num.paragraph_format.first_line_indent = Inches(0)
     r_num = p_num.add_run(f"Tabla {num}")
-    r_num.font.name = "Times New Roman"
-    r_num.font.size = Pt(12)
+    r_num.font.name = FONT_NAME
+    r_num.font.size = FONT_SIZE
     r_num.font.bold = True
+    r_num.font.color.rgb = BLACK
 
-    # Título de la tabla en cursiva (APA 7)
     p_tit = doc.add_paragraph()
+    p_tit.alignment = WD_ALIGN_PARAGRAPH.LEFT
     p_tit.paragraph_format.space_before = Pt(0)
     p_tit.paragraph_format.space_after = Pt(6)
     p_tit.paragraph_format.first_line_indent = Inches(0)
     r_tit = p_tit.add_run(title)
-    r_tit.font.name = "Times New Roman"
-    r_tit.font.size = Pt(12)
+    r_tit.font.name = FONT_NAME
+    r_tit.font.size = FONT_SIZE
     r_tit.font.italic = True
+    r_tit.font.color.rgb = BLACK
 
     table = doc.add_table(rows=len(rows) + 1, cols=len(headers))
     table.alignment = WD_TABLE_ALIGNMENT.CENTER
-    set_apa_table_borders(table)
+    set_full_black_table_borders(table)
 
-    # Encabezados
     for j, h in enumerate(headers):
         cell = table.rows[0].cells[j]
         set_cell_margins(cell, top=70, bottom=70, left=90, right=90)
         p = cell.paragraphs[0]
+        p.alignment = WD_ALIGN_PARAGRAPH.LEFT
         p.paragraph_format.space_before = Pt(0)
         p.paragraph_format.space_after = Pt(0)
         p.paragraph_format.line_spacing = 1.15
-        r = p.add_run(h)
-        r.font.name = "Times New Roman"
-        r.font.size = Pt(10.5)
+        r = p.add_run(limpiar_guiones(str(h)))
+        r.font.name = FONT_NAME
+        r.font.size = FONT_SIZE
         r.font.bold = True
-    set_row_bottom_border(table.rows[0], sz="8")
+        r.font.color.rgb = BLACK
 
-    # Filas
     for i, row_data in enumerate(rows, start=1):
         for j, val in enumerate(row_data):
             cell = table.rows[i].cells[j]
             set_cell_margins(cell, top=60, bottom=60, left=90, right=90)
             p = cell.paragraphs[0]
+            p.alignment = WD_ALIGN_PARAGRAPH.LEFT
             p.paragraph_format.space_before = Pt(0)
             p.paragraph_format.space_after = Pt(0)
             p.paragraph_format.line_spacing = 1.15
-            r = p.add_run(str(val))
-            r.font.name = "Times New Roman"
-            r.font.size = Pt(10)
+            r = p.add_run(limpiar_guiones(str(val)))
+            r.font.name = FONT_NAME
+            r.font.size = FONT_SIZE
+            r.font.color.rgb = BLACK
 
-    # Nota de tabla (APA 7: "Nota." en cursiva)
     p_note = doc.add_paragraph()
+    p_note.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
     p_note.paragraph_format.space_before = Pt(4)
     p_note.paragraph_format.space_after = Pt(10)
     p_note.paragraph_format.first_line_indent = Inches(0)
-    p_note.paragraph_format.line_spacing = 1.25
+    p_note.paragraph_format.line_spacing = 1.5
     rn1 = p_note.add_run("Nota. ")
-    rn1.font.name = "Times New Roman"
-    rn1.font.size = Pt(10)
+    rn1.font.name = FONT_NAME
+    rn1.font.size = FONT_SIZE
     rn1.font.italic = True
+    rn1.font.color.rgb = BLACK
     rn2 = p_note.add_run(note_text)
-    rn2.font.name = "Times New Roman"
-    rn2.font.size = Pt(10)
+    rn2.font.name = FONT_NAME
+    rn2.font.size = FONT_SIZE
+    rn2.font.color.rgb = BLACK
 
 
 def add_apa_figure(doc, num, title, img_path, note_text, width_inches=6.2):
+    title = limpiar_guiones(title)
+    note_text = limpiar_guiones(note_text)
+
     p_num = doc.add_paragraph()
+    p_num.alignment = WD_ALIGN_PARAGRAPH.LEFT
     p_num.paragraph_format.space_before = Pt(10)
     p_num.paragraph_format.space_after = Pt(2)
     p_num.paragraph_format.first_line_indent = Inches(0)
     r_num = p_num.add_run(f"Figura {num}")
-    r_num.font.name = "Times New Roman"
-    r_num.font.size = Pt(12)
+    r_num.font.name = FONT_NAME
+    r_num.font.size = FONT_SIZE
     r_num.font.bold = True
+    r_num.font.color.rgb = BLACK
 
     p_tit = doc.add_paragraph()
+    p_tit.alignment = WD_ALIGN_PARAGRAPH.LEFT
     p_tit.paragraph_format.space_before = Pt(0)
     p_tit.paragraph_format.space_after = Pt(6)
     p_tit.paragraph_format.first_line_indent = Inches(0)
     r_tit = p_tit.add_run(title)
-    r_tit.font.name = "Times New Roman"
-    r_tit.font.size = Pt(12)
+    r_tit.font.name = FONT_NAME
+    r_tit.font.size = FONT_SIZE
     r_tit.font.italic = True
+    r_tit.font.color.rgb = BLACK
 
     if os.path.exists(img_path):
         p_img = doc.add_paragraph()
@@ -272,45 +265,53 @@ def add_apa_figure(doc, num, title, img_path, note_text, width_inches=6.2):
         run_img.add_picture(img_path, width=Inches(width_inches))
 
     p_note = doc.add_paragraph()
+    p_note.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
     p_note.paragraph_format.space_before = Pt(4)
     p_note.paragraph_format.space_after = Pt(10)
     p_note.paragraph_format.first_line_indent = Inches(0)
-    p_note.paragraph_format.line_spacing = 1.25
+    p_note.paragraph_format.line_spacing = 1.5
     rn1 = p_note.add_run("Nota. ")
-    rn1.font.name = "Times New Roman"
-    rn1.font.size = Pt(10)
+    rn1.font.name = FONT_NAME
+    rn1.font.size = FONT_SIZE
     rn1.font.italic = True
+    rn1.font.color.rgb = BLACK
     rn2 = p_note.add_run(note_text)
-    rn2.font.name = "Times New Roman"
-    rn2.font.size = Pt(10)
+    rn2.font.name = FONT_NAME
+    rn2.font.size = FONT_SIZE
+    rn2.font.color.rgb = BLACK
 
 
 def add_code_block(doc, header_label, code_text):
+    header_label = limpiar_guiones(header_label)
+    code_text = limpiar_guiones(code_text)
+
     tbl = doc.add_table(rows=2, cols=1)
     tbl.alignment = WD_TABLE_ALIGNMENT.CENTER
+    set_full_black_table_borders(tbl)
+
     c0 = tbl.rows[0].cells[0]
-    set_cell_bg(c0, "1E293B")
-    set_cell_margins(c0, top=60, bottom=60, left=120, right=120)
+    set_cell_margins(c0, top=60, bottom=60, left=110, right=110)
     p0 = c0.paragraphs[0]
+    p0.alignment = WD_ALIGN_PARAGRAPH.LEFT
     p0.paragraph_format.space_before = Pt(0)
     p0.paragraph_format.space_after = Pt(0)
     r0 = p0.add_run(header_label)
-    r0.font.name = "Consolas"
-    r0.font.size = Pt(9.5)
+    r0.font.name = FONT_NAME
+    r0.font.size = FONT_SIZE
     r0.font.bold = True
-    r0.font.color.rgb = RGBColor(255, 255, 255)
+    r0.font.color.rgb = BLACK
 
     c1 = tbl.rows[1].cells[0]
-    set_cell_bg(c1, CODE_BG)
-    set_cell_margins(c1, top=90, bottom=90, left=120, right=120)
+    set_cell_margins(c1, top=80, bottom=80, left=110, right=110)
     p1 = c1.paragraphs[0]
+    p1.alignment = WD_ALIGN_PARAGRAPH.LEFT
     p1.paragraph_format.space_before = Pt(0)
     p1.paragraph_format.space_after = Pt(0)
     p1.paragraph_format.line_spacing = 1.15
     r1 = p1.add_run(code_text.strip())
-    r1.font.name = "Consolas"
-    r1.font.size = Pt(8.8)
-    r1.font.color.rgb = DARK_SLATE
+    r1.font.name = FONT_NAME
+    r1.font.size = FONT_SIZE
+    r1.font.color.rgb = BLACK
 
     p_sp = doc.add_paragraph()
     p_sp.paragraph_format.space_before = Pt(0)
@@ -318,23 +319,23 @@ def add_code_block(doc, header_label, code_text):
 
 
 def add_reference_apa(doc, ref_text):
+    ref_text = limpiar_guiones(ref_text)
     p = doc.add_paragraph()
-    p.alignment = WD_ALIGN_PARAGRAPH.LEFT
+    p.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
     p.paragraph_format.line_spacing = 1.5
     p.paragraph_format.left_indent = Inches(0.5)
     p.paragraph_format.first_line_indent = Inches(-0.5)
     p.paragraph_format.space_before = Pt(0)
     p.paragraph_format.space_after = Pt(6)
     r = p.add_run(ref_text)
-    r.font.name = "Times New Roman"
-    r.font.size = Pt(12)
+    r.font.name = FONT_NAME
+    r.font.size = FONT_SIZE
     r.font.color.rgb = BLACK
 
 
 def construir_documento():
     doc = Document()
 
-    # Configuración de márgenes APA 7 (2.54 cm = 1 pulgada en todos los lados)
     for section in doc.sections:
         section.top_margin = Inches(1.0)
         section.bottom_margin = Inches(1.0)
@@ -343,8 +344,8 @@ def construir_documento():
         add_page_number_to_header(section)
 
     style_normal = doc.styles["Normal"]
-    style_normal.font.name = "Times New Roman"
-    style_normal.font.size = Pt(12)
+    style_normal.font.name = FONT_NAME
+    style_normal.font.size = FONT_SIZE
     style_normal.font.color.rgb = BLACK
 
     # ══════════════════════════════════════════════════════════════════════════
@@ -360,9 +361,10 @@ def construir_documento():
         "Sistema Integrado de Análisis y Calidad de Datos para el Ecosistema Educativo "
         "Distrital de Bogotá D.C.\nManual Técnico, Fundamentación Conceptual y Operación (Versión Final 2.0)"
     )
-    r_t.font.name = "Times New Roman"
-    r_t.font.size = Pt(12)
+    r_t.font.name = FONT_NAME
+    r_t.font.size = FONT_SIZE
     r_t.font.bold = True
+    r_t.font.color.rgb = BLACK
 
     for _ in range(3):
         doc.add_paragraph()
@@ -383,8 +385,9 @@ def construir_documento():
         p.paragraph_format.line_spacing = 1.5
         p.paragraph_format.space_after = Pt(2)
         r = p.add_run(linea)
-        r.font.name = "Times New Roman"
-        r.font.size = Pt(12)
+        r.font.name = FONT_NAME
+        r.font.size = FONT_SIZE
+        r.font.color.rgb = BLACK
 
     doc.add_page_break()
 
@@ -404,13 +407,12 @@ def construir_documento():
         indent=True,
     )
 
-    # Recuadro destacado en la página 2 para el enlace de YouTube
     tbl_yt = doc.add_table(rows=5, cols=2)
     tbl_yt.alignment = WD_TABLE_ALIGNMENT.CENTER
-    set_apa_table_borders(tbl_yt)
+    set_full_black_table_borders(tbl_yt)
     yt_rows = [
         ("Enlace Público de YouTube (Video de Sustentación):", "https://youtu.be/[PEGAR_AQUI_ENLACE_PUBLICO_YOUTUBE]"),
-        ("Visibilidad y Duración:", "Pública (Acceso abierto sin restricción) | Duración: 8 minutos (Rango 5–10 min)"),
+        ("Visibilidad y Duración:", "Pública (Acceso abierto sin restricción) | Duración: 8 minutos (Rango 5 a 10 min)"),
         ("Integrantes en Cámara:", "David Santiago Castelblanco Artunduaga (67001182) y Dairo José Narváez Morales (67002032)"),
         ("Repositorio Oficial GitHub:", "https://github.com/HCA-3/Proyecto-ING-DATO.git"),
         ("Contenido Articulado:", "Fundamentación teórica (Cortes 1, 2 y 3), arquitectura Lakehouse + Streaming, aportes individuales y demostración funcional en terminal"),
@@ -418,22 +420,23 @@ def construir_documento():
     for idx, (k, v) in enumerate(yt_rows):
         c_k = tbl_yt.rows[idx].cells[0]
         c_v = tbl_yt.rows[idx].cells[1]
-        set_cell_bg(c_k, BOX_BG)
-        set_cell_bg(c_v, "FFFFFF" if idx != 0 else "FEF3C7")
         set_cell_margins(c_k, top=70, bottom=70, left=100, right=100)
         set_cell_margins(c_v, top=70, bottom=70, left=100, right=100)
         pk = c_k.paragraphs[0]
-        rk = pk.add_run(k)
-        rk.font.name = "Times New Roman"
-        rk.font.size = Pt(10.5)
+        pk.alignment = WD_ALIGN_PARAGRAPH.LEFT
+        rk = pk.add_run(limpiar_guiones(k))
+        rk.font.name = FONT_NAME
+        rk.font.size = FONT_SIZE
         rk.font.bold = True
+        rk.font.color.rgb = BLACK
         pv = c_v.paragraphs[0]
-        rv = pv.add_run(v)
-        rv.font.name = "Times New Roman"
-        rv.font.size = Pt(10.5)
+        pv.alignment = WD_ALIGN_PARAGRAPH.LEFT
+        rv = pv.add_run(limpiar_guiones(v))
+        rv.font.name = FONT_NAME
+        rv.font.size = FONT_SIZE
+        rv.font.color.rgb = BLACK
         if idx == 0:
             rv.font.bold = True
-            rv.font.color.rgb = RGBColor(180, 83, 9)
 
     add_apa_heading(doc, "Resumen Ejecutivo", level=1)
     add_apa_paragraph(
@@ -443,14 +446,14 @@ def construir_documento():
         "Bogotá D.C., articulando cifras oficiales sobre pobreza multidimensional, rezago y "
         "deserción escolar con una solución de ingeniería de datos completamente funcional. Se "
         "consolida la fundamentación teórica abordada a lo largo de los tres cortes de la "
-        "asignatura Ingeniería de Datos —desde arquitecturas Data Warehouse, Data Lake y Data "
+        "asignatura Ingeniería de Datos, abarcando desde arquitecturas Data Warehouse, Data Lake y Data "
         "Lakehouse (arquitectura Medallón Bronze, Silver y Gold), modelado dimensional en estrella, "
         "gobierno de calidad DAMA-DMBOK y marco normativo colombiano (Leyes 1712 de 2014 y 1581 de "
         "2012, CONPES 3920), hasta los paradigmas avanzados del Tercer Corte: pipelines ETL/ELT, "
         "Arquitectura Orientada a Eventos (EDA), diferenciación entre Event Time y Processing Time, "
         "marcas de agua (Watermarks), ventanas de tiempo (Tumbling, Sliding y Session Windows), "
         "tratamiento de eventos tardíos (Allowed Lateness y Side Output / DLQ) y motores de "
-        "streaming (Spark Structured Streaming, Apache Flink y Kafka Streams)—.",
+        "streaming (Spark Structured Streaming, Apache Flink y Kafka Streams).",
         indent=True,
     )
     add_apa_paragraph(
@@ -489,11 +492,11 @@ def construir_documento():
     add_apa_paragraph(
         doc,
         "El proyecto parte de una paradoja crítica en la gestión pública distrital: Bogotá D.C. "
-        "dispone de un volumen significativo de datos abiertos relacionados con la educación "
-        "—resultados de las pruebas estandarizadas Saber 11, directorios institucionales de "
+        "dispone de un volumen significativo de datos abiertos relacionados con la educación, "
+        "tales como resultados de las pruebas estandarizadas Saber 11, directorios institucionales de "
         "colegios oficiales y privados, registros de beneficiarios de programas de acceso a la "
         "educación superior como Jóvenes a la E y La U en tu Colegio, y reportes zonales de "
-        "deserción y repitencia—, pero dichos activos se encuentran fragmentados en silos "
+        "deserción y repitencia, pero dichos activos se encuentran fragmentados en silos "
         "independientes y presentan deficiencias severas de calidad (valores centinela en "
         "campos numéricos, ausencia de llaves foráneas DANE y rezagos en la transmisión de alertas).",
         indent=True,
@@ -559,7 +562,7 @@ def construir_documento():
         "instituciones educativas, la absorción en programas de educación superior y el flujo "
         "en tiempo real de alertas de deserción permite superar el paradigma tradicional de "
         "reportes estáticos y aislados. Este enfoque se alinea directamente con la Política "
-        "Nacional de Explotación de Datos — Big Data (Departamento Nacional de Planeación [DNP], "
+        "Nacional de Explotación de Datos, Big Data (Departamento Nacional de Planeación [DNP], "
         "2018, Documento CONPES 3920), la cual establece que los datos de las entidades públicas "
         "constituyen activos estratégicos para formular políticas basadas en evidencia y optimizar "
         "la focalización de recursos estatales.",
@@ -573,9 +576,9 @@ def construir_documento():
     add_apa_heading(doc, "3.1 Objetivo General", level=2)
     add_apa_paragraph(
         doc,
-        "Diseñar, implementar y validar una arquitectura híbrida de ingeniería de datos —integrada "
+        "Diseñar, implementar y validar una arquitectura híbrida de ingeniería de datos, integrada "
         "por un Data Lakehouse multicapa (Bronze, Silver y Gold) y un motor de procesamiento de "
-        "eventos en tiempo real con ventanas de tiempo y marcas de agua— que permita ingerir, "
+        "eventos en tiempo real con ventanas de tiempo y marcas de agua, que permita ingerir, "
         "depurar, cruzar y analizar información del ecosistema educativo de Bogotá D.C. para "
         "apoyar la toma de decisiones sobre equidad académica y prevención de la deserción escolar.",
         indent=True,
@@ -605,7 +608,7 @@ def construir_documento():
     )
     add_apa_bullet(
         doc,
-        "Procesamiento de eventos en tiempo real (Corte 3 — Streaming): ",
+        "Procesamiento de eventos en tiempo real (Corte 3, Streaming): ",
         "Desarrollar un módulo funcional orientado a eventos que implemente deduplicación "
         "idempotente, diferenciación entre Event Time y Processing Time, cálculo de Watermarks, "
         "agrupación mediante ventanas Tumbling, Sliding y Session, y desvío de eventos tardíos "
@@ -763,7 +766,7 @@ def construir_documento():
     add_apa_paragraph(
         doc,
         "Como se estudió en el Tercer Corte, una Arquitectura Orientada a Eventos (Event-Driven "
-        "Architecture - EDA) reemplaza el acoplamiento síncrono de petición/respuesta (REST) por "
+        "Architecture, EDA) reemplaza el acoplamiento síncrono de petición/respuesta (REST) por "
         "una comunicación asíncrona basada en la producción, enrutamiento y reacción ante eventos "
         "(hechos inmutables que ya ocurrieron y cambian el estado del dominio, nombrados en tiempo "
         "pasado o como sustantivos de notificación, p. ej., alerta.riesgo_desercion). La "
@@ -778,7 +781,7 @@ def construir_documento():
         doc,
         "En el módulo scripts/streaming_alertas_educativas.py aplicamos este paradigma adoptando "
         "la especificación estándar CloudEvents 1.0 de la Cloud Native Computing Foundation "
-        "(CNCF), estructurando cada alerta escolar con metadatos de cabeceras (specversion, id, "
+        "(CNCF, 2024), estructurando cada alerta escolar con metadatos de cabeceras (specversion, id, "
         "source, type, event_time, processing_time, partition_key) y carga útil (data). Asimismo, "
         "para mitigar el riesgo clásico de duplicidad de eventos ocasionado por reintentos de red "
         "(at-least-once delivery), implementamos un consumidor idempotente en la clase "
@@ -1027,7 +1030,7 @@ def construir_documento():
 ├── scripts/
 │   ├── generar_datos_raw.py             (Generador determinista de datasets RAW con semilla 42)
 │   ├── pipeline_educativo.py            (Orquestador principal Etapas 1 a 6: PySpark / Pandas)
-│   ├── streaming_alertas_educativas.py  (Motor EDA, Watermarks, Ventanas y DLQ — Corte 3)
+│   ├── streaming_alertas_educativas.py  (Motor EDA, Watermarks, Ventanas y DLQ, Corte 3)
 │   └── generar_graficos_evidencias.py   (Generador automatizado de figuras técnicas APA 7)
 ├── entregables/
 │   └── entrega final/                   (Manual Técnico APA 7, Presentación PPTX/HTML y Guion)
@@ -1147,8 +1150,8 @@ def get_dane():
 
 def crear_spark_session():
     if not HAY_PYSPARK or not comprobar_java_compatible():
-        print("ℹ️  Entorno Java local (Java 8) no compatible con PySpark 4.x (requiere Java 17+).")
-        print("ℹ️  Se activa el motor de procesamiento analítico local en Pandas.\\n")
+        print("Entorno Java local (Java 8) no compatible con PySpark 4.x (requiere Java 17+).")
+        print("Se activa el motor de procesamiento analítico local en Pandas.\\n")
         return None
     spark = (
         SparkSession.builder
@@ -1223,18 +1226,18 @@ def limpiar_valores_nulos(df: pd.DataFrame, columna: str, metodo: str = "moda") 
 
 def evaluar_alerta_localidad(nombre_localidad: str, tasa_desercion) -> str:
     if tasa_desercion is None or (isinstance(tasa_desercion, (int, float)) and tasa_desercion < 0):
-        return f"⚠️  [{nombre_localidad}] Dato inválido: tasa de deserción no disponible."
+        return f"[{nombre_localidad}] Dato inválido: tasa de deserción no disponible."
     try:
         tasa = float(tasa_desercion)
     except (ValueError, TypeError):
-        return f"⚠️  [{nombre_localidad}] Error: formato de tasa no numérico."
+        return f"[{nombre_localidad}] Error: formato de tasa no numérico."
     if tasa > UMBRAL_ALERTA:
         return (
-            f"🚨 ALERTA CRÍTICA: {nombre_localidad} — "
+            f"ALERTA CRÍTICA: {nombre_localidad}, "
             f"Tasa de deserción {tasa:.1f}% supera el umbral de {UMBRAL_ALERTA}%. "
             "Requiere intervención inmediata."
         )
-    return f"✅ {nombre_localidad} — Tasa de deserción {tasa:.1f}% dentro del límite aceptable ({UMBRAL_ALERTA}%)."
+    return f"OK: {nombre_localidad}, Tasa de deserción {tasa:.1f}% dentro del límite aceptable ({UMBRAL_ALERTA}%)."
 
 def cruzar_saber11_con_directorio(df_saber11, df_directorio, es_spark=False):
     if es_spark:
@@ -1308,7 +1311,7 @@ def cruzar_saber11_con_directorio(df_saber11, df_directorio, es_spark=False):
     # ══════════════════════════════════════════════════════════════════════════
     # 9.3 MÓDULO DE STREAMING DEL CORTE 3 (scripts/streaming_alertas_educativas.py)
     # ══════════════════════════════════════════════════════════════════════════
-    add_apa_heading(doc, "9.3 Módulo de Procesamiento de Eventos en Tiempo Real — Corte 3 (scripts/streaming_alertas_educativas.py)", level=2)
+    add_apa_heading(doc, "9.3 Módulo de Procesamiento de Eventos en Tiempo Real, Corte 3 (scripts/streaming_alertas_educativas.py)", level=2)
     add_apa_paragraph(
         doc,
         "Para materializar en código funcional los temas del Tercer Corte, se implementó el "
@@ -1408,8 +1411,8 @@ session_df  = stream_base.groupBy(session_window(col("event_time"), "4 minutes")
         title="Evidencia experimental (Corte 3): comparación Event Time vs. Processing Time y trazabilidad de eventos tardíos",
         headers=["Caso / Ventana", "Event Time (Colegio)", "Processing Time (Servidor SED)", "Watermark al Llegar", "Retraso (min)", "Resultado y Política Aplicada"],
         rows=[
-            ["Ventana [08:00, 08:10)", "8 eventos reales", "6 eventos vistos", "Cierra en WM=08:11", "—", "Processing Time subestima en -2 alertas el primer bloque matutino."],
-            ["Ventana [08:10, 08:20)", "5 eventos reales", "7 eventos vistos", "Cierra en WM=08:21", "—", "Processing Time infla en +2 alertas el segundo bloque por retrasos de red."],
+            ["Ventana [08:00, 08:10)", "8 eventos reales", "6 eventos vistos", "Cierra en WM=08:11", "N/A", "Processing Time subestima en -2 alertas el primer bloque matutino."],
+            ["Ventana [08:10, 08:20)", "5 eventos reales", "7 eventos vistos", "Cierra en WM=08:21", "N/A", "Processing Time infla en +2 alertas el segundo bloque por retrasos de red."],
             ["EVT-009 (Usme)", "08:09:10", "08:13:30", "08:08:00 (< 08:10)", "4.33 min", "ACEPTADO_EN_VENTANA: llega fuera de orden pero dentro del umbral WM (5 min)."],
             ["EVT-013 (Usme Rural)", "08:07:30", "08:19:30", "08:14:00 (<= 08:15)", "12.00 min", "ALLOWED_LATENESS: ventana [08:00, 08:10) ya cerrada, pero dentro de holgura (+5m); re-emite corrección."],
             ["EVT-017 (Sumapaz Rural)", "08:03:00", "08:31:00", "08:24:00 (> 08:15)", "28.00 min", "RECHAZADO_EXTREMO_DLQ: Spark haría Drop; se desvía a Side Output / DLQ para conciliación SED."],
@@ -1429,9 +1432,9 @@ session_df  = stream_base.groupBy(session_window(col("event_time"), "4 minutes")
         doc,
         "Finalmente, la Tabla 10 resume las salidas generadas por las tres tipologías de ventanas "
         "de tiempo en la capa Gold, demostrando cómo la ventana Sliding (10 min cada 2 min) logra "
-        "detectar la ráfaga crítica de 3 alertas en Bosa en el intervalo [08:02, 08:12) —la cual "
+        "detectar la ráfaga crítica de 3 alertas en Bosa en el intervalo [08:02, 08:12), la cual "
         "pasaba desapercibida en la ventana Tumbling fija porque 2 eventos cayeron en [08:00, 08:10) "
-        "y el tercero en [08:10, 08:20)—, y cómo las Session Windows separaron automáticamente "
+        "y el tercero en [08:10, 08:20), y cómo las Session Windows separaron automáticamente "
         "dos sesiones distintas de reporte en el colegio 110010190012 de Ciudad Bolívar tras una "
         "pausa superior al gap de 4 minutos.",
         indent=True,
@@ -1447,9 +1450,9 @@ session_df  = stream_base.groupBy(session_window(col("event_time"), "4 minutes")
             ["Tumbling (10 min fija)", "[08:00, 08:10)", "Usme", "2 alertas", "92.00 (Prom.)", "CORREGIDA dinámicamente al ingresar EVT-013 vía Allowed Lateness."],
             ["Sliding (10m / slide 2m)", "[08:02, 08:12)", "Bosa", "3 alertas", "85.50 (Prom.)", "RÁFAGA CRÍTICA detectada entre bloques fijos -> Despachar unidad móvil."],
             ["Sliding (10m / slide 2m)", "[08:10, 08:20)", "Kennedy", "3 alertas", "84.33 (Prom.)", "RÁFAGA CRÍTICA confirmada en 4 ventanas deslizantes consecutivas."],
-            ["Session (gap 4 min)", "Sesión #1 (08:01–08:08)", "DANE 110010190012 (C. Bolívar)", "3 alertas", "92.00 (Máx.)", "Sesión continua de 7.08 min del orientador escolar fusionando 3 casos."],
-            ["Session (gap 4 min)", "Sesión #2 (08:29–08:33)", "DANE 110010190012 (C. Bolívar)", "1 alerta", "87.00 (Máx.)", "Nueva sesión independiente abierta tras 24 min de inactividad (> gap 4m)."],
-            ["Session (gap 4 min)", "Sesión #1 (08:05–08:15)", "DANE 110010070045 (Bosa)", "3 alertas", "94.00 (Máx.)", "Sesión activa de 10.17 min que agrupa 3 reportes consecutivos en Bosa."],
+            ["Session (gap 4 min)", "Sesión #1 (08:01 a 08:08)", "DANE 110010190012 (C. Bolívar)", "3 alertas", "92.00 (Máx.)", "Sesión continua de 7.08 min del orientador escolar fusionando 3 casos."],
+            ["Session (gap 4 min)", "Sesión #2 (08:29 a 08:33)", "DANE 110010190012 (C. Bolívar)", "1 alerta", "87.00 (Máx.)", "Nueva sesión independiente abierta tras 24 min de inactividad (> gap 4m)."],
+            ["Session (gap 4 min)", "Sesión #1 (08:05 a 08:15)", "DANE 110010070045 (Bosa)", "3 alertas", "94.00 (Máx.)", "Sesión activa de 10.17 min que agrupa 3 reportes consecutivos en Bosa."],
         ],
         note_text="Datos extraídos de streaming_ventanas_tumbling.csv, streaming_ventanas_sliding_rafagas.csv y streaming_ventanas_session_colegios.csv.",
     )
@@ -1653,7 +1656,7 @@ session_df  = stream_base.groupBy(session_window(col("event_time"), "4 minutes")
         "la confirmación de creación de los 4 archivos CSV en data/RAW/ junto con el resumen de "
         "perfilamiento inicial.",
         indent=False,
-        bold_prefix="Tarea 1 — Generar o actualizar los datos crudos de la Capa Bronze (RAW): ",
+        bold_prefix="Tarea 1, Generar o actualizar los datos crudos de la Capa Bronze (RAW): ",
     )
     add_apa_paragraph(
         doc,
@@ -1662,11 +1665,11 @@ session_df  = stream_base.groupBy(session_window(col("event_time"), "4 minutes")
         "(Etapa 2) limpieza de centinelas, imputación por moda DANE y guardado en data/STAGING/; "
         "(Etapa 3) evaluación de la regla de alertas de deserción (> 8.0%) y absorción IES; "
         "(Etapa 4) cruce relacional LEFT JOIN con los 2,262 colegios activos; (Etapa 5) generación "
-        "del reporte de equidad educativa en data/ANALYTICS/; y (Etapa 6 — Corte 3) procesamiento "
+        "del reporte de equidad educativa en data/ANALYTICS/; y (Etapa 6, Corte 3) procesamiento "
         "del flujo de eventos en tiempo real con Watermarks, ventanas Tumbling/Sliding/Session y "
         "cola DLQ.",
         indent=False,
-        bold_prefix="Tarea 2 — Ejecutar el pipeline integral (Batch Lakehouse + Streaming Corte 3): ",
+        bold_prefix="Tarea 2, Ejecutar el pipeline integral (Batch Lakehouse + Streaming Corte 3): ",
     )
     add_apa_paragraph(
         doc,
@@ -1674,7 +1677,7 @@ session_df  = stream_base.groupBy(session_window(col("event_time"), "4 minutes")
         "del Tercer Corte para inspeccionar en detalle la traza de Watermarks y la cola DLQ, "
         "ejecutar: python scripts/streaming_alertas_educativas.py.",
         indent=False,
-        bold_prefix="Tarea 3 — Ejecutar de forma independiente la simulación de Streaming (Corte 3): ",
+        bold_prefix="Tarea 3, Ejecutar de forma independiente la simulación de Streaming (Corte 3): ",
     )
     add_apa_paragraph(
         doc,
@@ -1682,7 +1685,7 @@ session_df  = stream_base.groupBy(session_window(col("event_time"), "4 minutes")
         "los 11 archivos CSV generados directamente en Microsoft Excel o Power BI para visualizar "
         "los tableros de equidad, ráfagas críticas de inasistencia y sesiones por colegio.",
         indent=False,
-        bold_prefix="Tarea 4 — Consultar los reportes analíticos y figuras en la Capa Gold: ",
+        bold_prefix="Tarea 4, Consultar los reportes analíticos y figuras en la Capa Gold: ",
     )
 
     add_apa_heading(doc, "11.3 Guía de Mensajes y Solución de Problemas Frecuentes", level=2)
@@ -1694,7 +1697,7 @@ session_df  = stream_base.groupBy(session_window(col("event_time"), "4 minutes")
         rows=[
             ["Error: Archivo data/RAW/... no encontrado", "Se ejecutó el pipeline sin haber creado primero los datasets crudos.", "Ejecutar primero: python scripts/generar_datos_raw.py"],
             ["Entorno Java local (Java 8) no compatible con PySpark 4.x", "La estación local tiene Java 8 y Spark 4 requiere Java 17+.", "No requiere acción: el sistema activa automáticamente el motor Pandas y completa las 6 etapas."],
-            ["ALERTA CRÍTICA: [Localidad] — Tasa supera 8.0%", "La tasa de deserción de la localidad rebasa el límite distrital.", "Priorizar la localidad en los planes de intervención y búsqueda activa de la SED."],
+            ["ALERTA CRÍTICA: [Localidad], Tasa supera 8.0%", "La tasa de deserción de la localidad rebasa el límite distrital.", "Priorizar la localidad en los planes de intervención y búsqueda activa de la SED."],
             ["RÁFAGA CRÍTICA (3 alertas en 10 min)", "La ventana Sliding detectó acumulación rápida de alertas en una localidad.", "Despachar unidad móvil de atención psicosocial a los colegios reportados."],
             ["RECHAZADO_EXTREMO_DLQ (EVT-017 Sumapaz)", "Un evento llegó 28 min tarde tras cerrarse la ventana y su Allowed Lateness.", "Consultar data/ANALYTICS/streaming_eventos_tardios_dlq.csv para conciliación administrativa."],
         ],
@@ -1778,7 +1781,7 @@ session_df  = stream_base.groupBy(session_window(col("event_time"), "4 minutes")
     add_apa_heading(doc, "Referencias", level=1)
 
     referencias = [
-        "Akidau, T., Bradshaw, R., Chambers, C., Chernyak, S., Fernández-Moctezuma, R. J., Lax, R., McVeety, S., Mills, D., Perry, F., Schmidt, E., & Whittle, S. (2015). The dataflow model: A practical approach to balancing correctness, latency, and cost in massive-scale, unbounded, out-of-order data processing. Proceedings of the VLDB Endowment, 8(12), 1792–1803. https://doi.org/10.14778/2824032.2824076",
+        "Akidau, T., Bradshaw, R., Chambers, C., Chernyak, S., Fernández-Moctezuma, R. J., Lax, R., McVeety, S., Mills, D., Perry, F., Schmidt, E., & Whittle, S. (2015). The dataflow model: A practical approach to balancing correctness, latency, and cost in massive-scale, unbounded, out-of-order data processing. Proceedings of the VLDB Endowment, 8(12), 1792-1803. https://doi.org/10.14778/2824032.2824076",
         "Akidau, T., Chernyak, S., & Lax, R. (2018). Streaming systems: The what, where, when, and how of large-scale data processing. O'Reilly Media.",
         "Alcaldía Mayor de Bogotá D.C. (2024). Cupos escolares en Bogotá: Distrito busca población desescolarizada en localidades priorizadas. Secretaría de Educación del Distrito. https://www.educacionbogota.edu.co/",
         "Apache Software Foundation. (2026a). Apache Flink documentation: Stateful stream processing, event time and watermarks (Version 2.0). https://nightlies.apache.org/flink/flink-docs-stable/",
@@ -1792,13 +1795,12 @@ session_df  = stream_base.groupBy(session_window(col("event_time"), "4 minutes")
         "Departamento Administrativo Nacional de Estadística [DANE]. (2025). Boletín técnico: Pobreza multidimensional en Colombia y Bogotá D.C., resultados año 2024. https://www.dane.gov.co/",
         "Departamento Nacional de Planeación [DNP]. (2018). Documento CONPES 3920: Política Nacional de Explotación de Datos (Big Data). Consejo Nacional de Política Económica y Social.",
         "Kleppmann, M. (2017). Designing data-intensive applications: The big ideas behind reliable, scalable, and maintainable systems. O'Reilly Media.",
-        "SaluData — Observatorio de Salud de Bogotá. (2025). Pobreza monetaria y condiciones de vida por localidad en Bogotá D.C. Secretaría Distrital de Salud. https://saludata.saludcapital.gov.co/",
+        "SaluData, Observatorio de Salud de Bogotá. (2025). Pobreza monetaria y condiciones de vida por localidad en Bogotá D.C. Secretaría Distrital de Salud. https://saludata.saludcapital.gov.co/",
         "Secretaría de Educación del Distrito [SED]. (2025). Portal de Datos Abiertos de Bogotá D.C.: Conjuntos de datos del sector educación. https://datosabiertos.bogota.gov.co/",
     ]
     for ref in referencias:
         add_reference_apa(doc, ref)
 
-    # Guardar en todas las ubicaciones requeridas
     rutas_destino = [
         os.path.join(WORKSPACE_DOCS, "Documento Integrado del Proyecto.docx"),
         os.path.join(BASE_REPO, "entregables", "entrega final", "Documento Integrado del Proyecto.docx"),
@@ -1807,7 +1809,7 @@ session_df  = stream_base.groupBy(session_window(col("event_time"), "4 minutes")
     for r in rutas_destino:
         os.makedirs(os.path.dirname(r), exist_ok=True)
         doc.save(r)
-        print("✅ Documento guardado en:", r)
+        print("Documento guardado en:", r)
 
 
 if __name__ == "__main__":
