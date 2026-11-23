@@ -331,11 +331,11 @@ def construir_pptx():
         "• Evidencia empírica: Processing Time subestima [-2] en [08:00, 08:10) y sobreestima [+2] en [08:10, 08:20).",
     ], PURPLE_SOFT, PURPLE_ACC, PptRGB(91, 33, 182))
 
-    # ── SLIDE 7: CORTE 3 — VENTANAS TUMBLING, SLIDING Y SESSION + MOTORES ──
+    # ── SLIDE 7: CORTE 3 — VENTANAS TUMBLING, SLIDING Y SESSION ──
     s7 = prs.slides.add_slide(blank)
     set_slide_bg(s7, BG_LIGHT)
     add_header(s7, "6. Tercer Corte (Parte II): Ventanas Tumbling, Sliding y Session",
-               "Segmentación del flujo infinito en bloques finitos y comparación Spark / Flink / Kafka Streams",
+               "Segmentación del flujo de alertas educativas en bloques finitos e implementación en el proyecto",
                "Diapositiva 7/10", "David Castelblanco", "05:10 - 06:00")
 
     add_card(s7, 0.5, 1.35, 4.0, 3.10, "🕒 1. Tumbling Window (10 min)", [
@@ -358,12 +358,12 @@ def construir_pptx():
         "• Evidencia: En IED 110010190012 (C. Bolívar) fusiona 3 alertas en Sesión #1 (7.08 min) y abre Sesión #2 a las 08:29.",
     ], GREEN_SOFT, GREEN_ACC, PptRGB(22, 101, 52))
 
-    add_card(s7, 0.5, 4.60, 12.3, 2.35, "⚙️ Código PySpark Structured Streaming & Comparativa con Apache Flink y Kafka Streams", [
+    add_card(s7, 0.5, 4.60, 12.3, 2.35, "⚙️ Implementación en PySpark Structured Streaming para el Proyecto Educativo", [
         "stream_base = spark.readStream.schema(esquema).json('data/RAW/eventos_asistencia_desercion_stream.jsonl').withWatermark('event_time', '5 minutes')",
         "tumbling = stream_base.groupBy(window(col('event_time'), '10 minutes'), col('data.localidad')).count()",
         "sliding  = stream_base.groupBy(window(col('event_time'), '10 minutes', '2 minutes'), col('data.localidad')).count().where('count >= 3')",
         "session  = stream_base.groupBy(session_window(col('event_time'), '4 minutes'), col('data.cod_dane')).count()",
-        "• Decisión Arquitectónica: Spark unifica Batch + Streaming por micro-lotes; Flink 2.0 aporta estado desagregado y Side Outputs nativos; Kafka Streams opera como librería ligera con KStream/KTable.",
+        "• Los resultados procesados se persisten automáticamente en data/ANALYTICS/ para consulta de la Secretaría de Educación.",
     ], NAVY_DARK, BLUE_ACCENT, PptRGB(96, 165, 250), is_code=True)
 
     # ── SLIDE 8: IDENTIFICACIÓN ARGUMENTADA DE APORTES POR INTEGRANTE ──
