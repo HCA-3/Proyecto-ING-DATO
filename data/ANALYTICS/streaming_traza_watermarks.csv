@@ -1,0 +1,18 @@
+id,localidad,cod_dane,tipo_evento,puntaje_riesgo,event_time,processing_time,retraso_min,ventana_et,watermark_al_llegar,nuevo_watermark,clasificacion_arrivo,accion_motor
+EVT-001,CIUDAD BOLÍVAR,110010190012,alerta.riesgo_desercion,88.5,2026-11-22 08:01:10,2026-11-22 08:01:15,0.08,"[08:00, 08:10)",08:00:00 (Inicial),07:56:10,ACEPTADO_EN_VENTANA,Acumulado en State Store de ventana abierta
+EVT-002,CIUDAD BOLÍVAR,110010190012,solicitud.apoyo_psicosocial,84.0,2026-11-22 08:02:30,2026-11-22 08:02:40,0.17,"[08:00, 08:10)",07:56:10,07:57:30,ACEPTADO_EN_VENTANA,Acumulado en State Store de ventana abierta
+EVT-003,CIUDAD BOLÍVAR,110010190012,alerta.riesgo_desercion,92.0,2026-11-22 08:04:15,2026-11-22 08:04:22,0.12,"[08:00, 08:10)",07:57:30,07:59:15,ACEPTADO_EN_VENTANA,Acumulado en State Store de ventana abierta
+EVT-004,BOSA,110010070045,inasistencia.critica,76.0,2026-11-22 08:05:00,2026-11-22 08:05:10,0.17,"[08:00, 08:10)",07:59:15,08:00:00,ACEPTADO_EN_VENTANA,Acumulado en State Store de ventana abierta
+EVT-005,TEUSAQUILLO,110010130088,actualizacion.matricula_simat,22.0,2026-11-22 08:06:20,2026-11-22 08:06:35,0.25,"[08:00, 08:10)",08:00:00,08:01:20,ACEPTADO_EN_VENTANA,Acumulado en State Store de ventana abierta
+EVT-006,BOSA,110010070045,alerta.riesgo_desercion,86.5,2026-11-22 08:08:40,2026-11-22 08:08:50,0.17,"[08:00, 08:10)",08:01:20,08:03:40,ACEPTADO_EN_VENTANA,Acumulado en State Store de ventana abierta
+EVT-007,BOSA,110010070045,alerta.riesgo_desercion,94.0,2026-11-22 08:11:10,2026-11-22 08:11:20,0.17,"[08:10, 08:20)",08:03:40,08:06:10,ACEPTADO_EN_VENTANA,Acumulado en State Store de ventana abierta
+EVT-008,FONTIBÓN,110010090031,alerta.riesgo_desercion,81.5,2026-11-22 08:13:00,2026-11-22 08:13:10,0.17,"[08:10, 08:20)",08:06:10,08:08:00,ACEPTADO_EN_VENTANA,Acumulado en State Store de ventana abierta
+EVT-009,USME,110010050019,alerta.riesgo_desercion,89.0,2026-11-22 08:09:10,2026-11-22 08:13:30,4.33,"[08:00, 08:10)",08:08:00,08:08:00,ACEPTADO_EN_VENTANA,Acumulado en State Store de ventana abierta
+EVT-010,KENNEDY,110010080077,inasistencia.critica,79.0,2026-11-22 08:16:00,2026-11-22 08:16:08,0.13,"[08:10, 08:20)",08:08:00,08:11:00,ACEPTADO_EN_VENTANA,Acumulado en State Store de ventana abierta
+EVT-011,KENNEDY,110010080077,solicitud.apoyo_psicosocial,83.0,2026-11-22 08:17:30,2026-11-22 08:17:40,0.17,"[08:10, 08:20)",08:11:00,08:12:30,ACEPTADO_EN_VENTANA,Acumulado en State Store de ventana abierta
+EVT-012,KENNEDY,110010080077,alerta.riesgo_desercion,91.0,2026-11-22 08:19:00,2026-11-22 08:19:12,0.2,"[08:10, 08:20)",08:12:30,08:14:00,ACEPTADO_EN_VENTANA,Acumulado en State Store de ventana abierta
+EVT-013,USME,110010050019,alerta.riesgo_desercion,95.0,2026-11-22 08:07:30,2026-11-22 08:19:30,12.0,"[08:00, 08:10)",08:14:00,08:14:00,ALLOWED_LATENESS,Ventana reabierta en memoria; se re-emite versión corregida
+EVT-014,SUBA,110010110054,inasistencia.critica,72.0,2026-11-22 08:22:00,2026-11-22 08:22:10,0.17,"[08:20, 08:30)",08:14:00,08:17:00,ACEPTADO_EN_VENTANA,Acumulado en State Store de ventana abierta
+EVT-015,USAQUÉN,110010010022,actualizacion.matricula_simat,31.0,2026-11-22 08:26:30,2026-11-22 08:26:40,0.17,"[08:20, 08:30)",08:17:00,08:21:30,ACEPTADO_EN_VENTANA,Acumulado en State Store de ventana abierta
+EVT-016,CIUDAD BOLÍVAR,110010190012,alerta.riesgo_desercion,87.0,2026-11-22 08:29:00,2026-11-22 08:29:05,0.08,"[08:20, 08:30)",08:21:30,08:24:00,ACEPTADO_EN_VENTANA,Acumulado en State Store de ventana abierta
+EVT-017,SUMAPAZ,110010200003,alerta.riesgo_desercion,97.5,2026-11-22 08:03:00,2026-11-22 08:31:00,28.0,"[08:00, 08:10)",08:24:00,08:24:00,RECHAZADO_EXTREMO_DLQ,Spark lo descartaría (Drop); desviado a Side Output / DLQ para conciliación SED

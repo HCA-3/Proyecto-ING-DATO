@@ -12,8 +12,8 @@ Autores:
     Dairo Jose Narvaez Moralez (67002032)              — Limpieza y documentación
 
 Asignatura: Ingeniería de Datos
-Versión: v1.0.0
-Fecha: 02/11/2026
+Versión: v2.0.0 (Entrega Final — Arquitectura Lakehouse Batch + Streaming Corte 3)
+Fecha: 22/11/2026
 """
 
 import os
@@ -562,11 +562,18 @@ def ejecutar_pipeline() -> None:
     df_alertas_crit.to_csv(ruta_al, index=False, encoding="utf-8")
     print(f"  💾 [ANALYTICS] Alertas Críticas: {ruta_al}")
 
+    # 6. Procesamiento de Eventos en Tiempo Real (Corte 3: EDA, Watermarks, Ventanas y DLQ)
+    try:
+        from streaming_alertas_educativas import ejecutar_streaming_educativo
+        ejecutar_streaming_educativo()
+    except Exception as e:
+        print(f"⚠️  Aviso al ejecutar módulo de streaming: {e}")
+
     if usar_spark:
         spark.stop()
 
     print("\n" + "=" * 65)
-    print("  ✅ PIPELINE EJECUTADO CON ÉXITO")
+    print("  ✅ PIPELINE INTEGRAL (BATCH + STREAMING CORTE 3) EJECUTADO CON ÉXITO")
     print(f"     STAGING   -> {STAGING_DIR}")
     print(f"     ANALYTICS -> {ANALYTICS_DIR}")
     print("=" * 65 + "\n")

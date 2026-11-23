@@ -128,18 +128,46 @@ Los archivos CSV son leídos con tipos por defecto por Pandas/PySpark. Se detect
 
 ```
 data/
-├── RAW/          ← Zona inmutable (origen auditado)
+├── RAW/          ← Zona inmutable (origen auditado: 4 CSV Batch + 1 JSONL CloudEvents)
 │   ├── Saber11_2025_Bogota.csv
 │   ├── Directorio_Colegios_Bogota.csv
 │   ├── Beneficiarios_Jovenes_a_la_E.csv
-│   └── Reporte_Alertas_Localidad.csv
-├── STAGING/      ← Zona limpia (destino de transformaciones)
-└── ANALYTICS/    ← Zona analítica (modelo dimensional estrella)
+│   ├── Reporte_Alertas_Localidad.csv
+│   └── eventos_asistencia_desercion_stream.jsonl
+├── STAGING/      ← Zona limpia (destino de transformaciones e imputación Silver)
+└── ANALYTICS/    ← Zona analítica (modelo dimensional estrella + reportes Streaming + figuras/)
 
 scripts/
-└── generar_datos_raw.py   ← Generador de datos sintéticos RAW
+├── generar_datos_raw.py                ← Generador de datos sintéticos RAW (semilla 42)
+├── pipeline_educativo.py               ← Orquestador principal (Etapas 1-5 Batch + Etapa 6 Streaming)
+├── streaming_alertas_educativas.py     ← Motor EDA, Watermarks, Ventanas (Tumbling/Sliding/Session) y DLQ
+├── generar_graficos_evidencias.py      ← Generador de figuras técnicas en formato APA 7
+├── generar_documento_integrado_apa7.py ← Generador del Manual Técnico y de Usuario en normas APA 7
+└── generar_presentacion_y_guion_final.py ← Generador de presentación PPTX/HTML y guion de sustentación
+
+entregables/
+└── entrega final/
+    ├── Documento Integrado del Proyecto.docx
+    ├── Documento Integrado del Proyecto.pdf
+    ├── Presentacion_Sustentacion_Entrega_Final.pptx
+    ├── Presentacion_Interactiva_Sustentacion.html
+    └── Guion_Video_Sustentacion_Entrega_Final.docx
 ```
 
 ---
 
-*Última actualización: 2025 — Proyecto Integrador Ingeniería de Datos*
+## 7. Extensión del Tercer Corte — Procesamiento de Eventos en Tiempo Real (EDA & Streaming)
+
+En la versión final **v2.0.0** se implementó el módulo `scripts/streaming_alertas_educativas.py` (integrado automáticamente como **Etapa 6** de `scripts/pipeline_educativo.py`), el cual aplica los conceptos del Tercer Corte al monitoreo de alertas de inasistencia y riesgo de deserción escolar:
+
+- **Arquitectura Orientada a Eventos (EDA) y CloudEvents 1.0**: Productor de eventos escolares JSONL, `BrokerEventosEducativos` particionado por localidad y consumidor **idempotente** que descarta en $O(1)$ reintentos duplicados de red (`EVT-004`).
+- **Event Time vs. Processing Time y Watermarks**: Procesamiento gobernado por el tiempo real del evento en el colegio (`event_time`) con marca de agua dinámica $\text{WM} = \max(\text{event\_time}) - 5\text{ min}$, demostrando empíricamente la distorsión que produciría agrupar por `processing_time`.
+- **Ventanas de Tiempo**:
+  - **Tumbling Windows (10 min, sin traslape)**: Reporte periódico de alertas y puntaje de riesgo por localidad (`streaming_ventanas_tumbling.csv`).
+  - **Sliding Windows (10 min cada 2 min, factor 5×)**: Detección de ráfagas críticas ($\ge 3$ alertas en cualquier ventana móvil de 10 minutos, como ocurre en Bosa, Ciudad Bolívar y Kennedy; `streaming_ventanas_sliding_rafagas.csv`).
+  - **Session Windows (brecha de inactividad de 4 min por código DANE)**: Agrupación dinámica de sesiones activas de reporte de los orientadores escolares (`streaming_ventanas_session_colegios.csv`).
+- **Tratamiento de Eventos Tardíos (Allowed Lateness y Side Output / DLQ)**: Re-emisión corregida para atrasos moderados (+5 min de holgura, `EVT-013` en Usme) y desvío a una **Dead Letter Queue (`streaming_eventos_tardios_dlq.csv`)** para eventos rurales extremadamente tardíos (`EVT-017` en Sumapaz con 28 min de retraso por caída de enlace satelital), garantizando **cero pérdida de alertas estudiantiles**.
+
+---
+
+*Última actualización: 22 de noviembre de 2026 — Entrega Final Proyecto Integrador Ingeniería de Datos (David Santiago Castelblanco Artunduaga & Dairo José Narváez Morales)*

@@ -1,0 +1,2 @@
+id,localidad,cod_dane,tipo_evento,puntaje_riesgo,event_time,processing_time,retraso_min,ventana_et,watermark_al_llegar,nuevo_watermark,clasificacion_arrivo,accion_motor
+EVT-017,SUMAPAZ,110010200003,alerta.riesgo_desercion,97.5,2026-11-22 08:03:00,2026-11-22 08:31:00,28.0,"[08:00, 08:10)",08:24:00,08:24:00,RECHAZADO_EXTREMO_DLQ,Spark lo descartaría (Drop); desviado a Side Output / DLQ para conciliación SED
