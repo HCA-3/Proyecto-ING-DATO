@@ -772,12 +772,25 @@ PS Proyecto-ING-DATO&gt; python scripts/streaming_alertas_educativas.py</pre>
 # 3. GENERACIÓN DEL GUION DE SUSTENTACIÓN PARA EL VIDEO (5-10 MINUTOS)
 # ══════════════════════════════════════════════════════════════════════════════
 def set_doc_cell_bg(cell, fill_hex):
-    tcPr = cell._tc.get_or_add_tcPr()
-    shd = OxmlElement("w:shd")
-    shd.set(qn("w:val"), "clear")
-    shd.set(qn("w:color"), "auto")
-    shd.set(qn("w:fill"), fill_hex)
-    tcPr.append(shd)
+    # Sin color de fondo en tablas de Word (fondo blanco/transparente)
+    pass
+
+
+def set_full_black_borders(table):
+    tblPr = table._tbl.tblPr
+    borders = OxmlElement("w:tblBorders")
+    for b_name in ["top", "bottom", "left", "right", "insideH", "insideV"]:
+        b = OxmlElement(f"w:{b_name}")
+        b.set(qn("w:val"), "single")
+        b.set(qn("w:sz"), "6")
+        b.set(qn("w:space"), "0")
+        b.set(qn("w:color"), "000000")
+        borders.append(b)
+    tblPr.append(borders)
+
+
+def limpiar_guiones_guion(texto: str) -> str:
+    return texto.replace(" — ", ", ").replace("—", "-").replace(" – ", " a ").replace("–", "-")
 
 
 def set_doc_cell_margins(cell, top=90, bottom=90, left=130, right=130):
@@ -794,128 +807,152 @@ def set_doc_cell_margins(cell, top=90, bottom=90, left=130, right=130):
 def construir_guion_docx():
     doc = Document()
     for s in doc.sections:
-        s.top_margin = DocInches(0.8)
-        s.bottom_margin = DocInches(0.8)
-        s.left_margin = DocInches(0.85)
-        s.right_margin = DocInches(0.85)
+        s.top_margin = DocInches(1.0)
+        s.bottom_margin = DocInches(1.0)
+        s.left_margin = DocInches(1.0)
+        s.right_margin = DocInches(1.0)
 
+    BLACK_DOC = DocRGB(0, 0, 0)
     st = doc.styles["Normal"]
-    st.font.name = "Segoe UI"
-    st.font.size = DocPt(10.5)
-    st.font.color.rgb = DocRGB(30, 41, 59)
+    st.font.name = "Arial"
+    st.font.size = DocPt(12)
+    st.font.color.rgb = BLACK_DOC
 
     p_hdr = doc.add_paragraph()
     p_hdr.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    r1 = p_hdr.add_run("UNIVERSIDAD CATÓLICA DE COLOMBIA · INGENIERÍA DE DATOS (ENTREGA FINAL CORTE 3)\n")
-    r1.font.size = DocPt(10)
+    p_hdr.paragraph_format.line_spacing = 1.5
+    r1 = p_hdr.add_run("UNIVERSIDAD CATÓLICA DE COLOMBIA - INGENIERÍA DE DATOS (ENTREGA FINAL CORTE 3)\n")
+    r1.font.name = "Arial"
+    r1.font.size = DocPt(12)
     r1.font.bold = True
-    r1.font.color.rgb = DocRGB(37, 99, 235)
+    r1.font.color.rgb = BLACK_DOC
 
     r2 = p_hdr.add_run("GUION DE SUSTENTACIÓN EN VIDEO Y DEMOSTRACIÓN FUNCIONAL (DURACIÓN: 8 MINUTOS)\n")
-    r2.font.size = DocPt(16)
+    r2.font.name = "Arial"
+    r2.font.size = DocPt(12)
     r2.font.bold = True
-    r2.font.color.rgb = DocRGB(15, 23, 42)
+    r2.font.color.rgb = BLACK_DOC
 
     r3 = p_hdr.add_run(
         "Integrantes en cámara: David Santiago Castelblanco Artunduaga (67001182) y Dairo José Narváez Morales (67002032)\n"
         "Rango oficial exigido: Mínimo 5 y máximo 10 minutos | Visibilidad en YouTube: Pública"
     )
-    r3.font.size = DocPt(10)
+    r3.font.name = "Arial"
+    r3.font.size = DocPt(12)
     r3.font.italic = True
-    r3.font.color.rgb = DocRGB(100, 116, 139)
+    r3.font.color.rgb = BLACK_DOC
 
-    h1 = doc.add_heading("1. Distribución Equitativa de Tiempos y Cumplimiento de la Rúbrica", level=1)
-    h1.runs[0].font.color.rgb = DocRGB(15, 23, 42)
+    p_h1 = doc.add_paragraph()
+    p_h1.alignment = WD_ALIGN_PARAGRAPH.LEFT
+    p_h1.paragraph_format.space_before = DocPt(12)
+    p_h1.paragraph_format.space_after = DocPt(6)
+    rh1 = p_h1.add_run("1. Distribución Equitativa de Tiempos y Cumplimiento de la Rúbrica")
+    rh1.font.name = "Arial"
+    rh1.font.size = DocPt(12)
+    rh1.font.bold = True
+    rh1.font.color.rgb = BLACK_DOC
 
     t_cron = doc.add_table(rows=9, cols=4)
     t_cron.alignment = WD_TABLE_ALIGNMENT.CENTER
+    set_full_black_borders(t_cron)
     headers = ["Bloque / Minuto", "Diapositiva / Pantalla", "Integrante en Cámara", "Objetivo Clave Evaluado por la Docente"]
     for j, h in enumerate(headers):
         c = t_cron.rows[0].cells[j]
-        set_doc_cell_bg(c, "0F172A")
         set_doc_cell_margins(c)
         p = c.paragraphs[0]
-        r = p.add_run(h)
+        p.alignment = WD_ALIGN_PARAGRAPH.LEFT
+        r = p.add_run(limpiar_guiones_guion(h))
+        r.font.name = "Arial"
+        r.font.size = DocPt(12)
         r.font.bold = True
-        r.font.color.rgb = DocRGB(255, 255, 255)
+        r.font.color.rgb = BLACK_DOC
 
     cron_data = [
-        ("00:00 – 00:40 (40 s)", "Diapositiva 1 (Portada)", "David Castelblanco y Dairo Narváez", "Presentación en cámara de ambos integrantes y propósito general del sistema."),
-        ("00:40 – 01:40 (60 s)", "Diapositiva 2 (Problemática y Ética)", "Dairo José Narváez", "Cifras DANE/SaluData, 4 patologías de calidad y cumplimiento Ley 1581 (SHA-256)."),
-        ("01:40 – 02:45 (65 s)", "Diapositiva 3 (Arquitectura Híbrida)", "David Santiago Castelblanco", "Conceptos Cortes 1, 2 y 3: Lakehouse Medallón (Bronze/Silver/Gold) + Streaming EDA."),
-        ("02:45 – 04:00 (75 s)", "Diapositivas 4 y 5 (Código Batch)", "Dairo Narváez y David Castelblanco", "Explicación técnica de código: centinelas O(1), moda DANE, resiliencia Spark y LEFT JOIN."),
-        ("04:00 – 05:10 (70 s)", "Diapositiva 6 (Corte 3: EDA y WM)", "Dairo José Narváez", "CloudEvents, idempotencia, Event Time vs. Processing Time, Watermark y cola DLQ."),
-        ("05:10 – 06:05 (55 s)", "Diapositiva 7 (Corte 3: Ventanas)", "David Santiago Castelblanco", "Ventanas Tumbling (10m), Sliding (10m/2m ráfaga Bosa), Session (gap 4m) y Spark vs. Flink."),
-        ("06:05 – 06:45 (40 s)", "Diapositiva 8 (Aportes Individuales)", "David Castelblanco y Dairo Narváez", "Argumentación explícita de qué desarrolló cada integrante y en qué sección del manual está."),
-        ("06:45 – 08:00 (75 s)", "Diapositivas 9–10 + Terminal en Vivo", "Demostración Conjunta en Pantalla", "Ejecución real en consola de pipeline_educativo.py (Etapas 1 a 6) y cierre."),
+        ("00:00 a 00:40 (40 s)", "Diapositiva 1 (Portada)", "David Castelblanco y Dairo Narváez", "Presentación en cámara de ambos integrantes y propósito general del sistema."),
+        ("00:40 a 01:40 (60 s)", "Diapositiva 2 (Problemática y Ética)", "Dairo José Narváez", "Cifras DANE/SaluData, 4 patologías de calidad y cumplimiento Ley 1581 (SHA-256)."),
+        ("01:40 a 02:45 (65 s)", "Diapositiva 3 (Arquitectura Híbrida)", "David Santiago Castelblanco", "Conceptos Cortes 1, 2 y 3: Lakehouse Medallón (Bronze/Silver/Gold) + Streaming EDA."),
+        ("02:45 a 04:00 (75 s)", "Diapositivas 4 y 5 (Código Batch)", "Dairo Narváez y David Castelblanco", "Explicación técnica de código: centinelas O(1), moda DANE, resiliencia Spark y LEFT JOIN."),
+        ("04:00 a 05:10 (70 s)", "Diapositiva 6 (Corte 3: EDA y WM)", "Dairo José Narváez", "CloudEvents, idempotencia, Event Time vs. Processing Time, Watermark y cola DLQ."),
+        ("05:10 a 06:05 (55 s)", "Diapositiva 7 (Corte 3: Ventanas)", "David Santiago Castelblanco", "Ventanas Tumbling (10m), Sliding (10m/2m ráfaga Bosa), Session (gap 4m) y Spark vs. Flink."),
+        ("06:05 a 06:45 (40 s)", "Diapositiva 8 (Aportes Individuales)", "David Castelblanco y Dairo Narváez", "Argumentación explícita de qué desarrolló cada integrante y en qué sección del manual está."),
+        ("06:45 a 08:00 (75 s)", "Diapositivas 9 y 10 + Terminal en Vivo", "Demostración Conjunta en Pantalla", "Ejecución real en consola de pipeline_educativo.py (Etapas 1 a 6) y cierre."),
     ]
     for i, row in enumerate(cron_data, start=1):
-        bg = "F8FAFC" if i % 2 == 1 else "EFF6FF"
         for j, val in enumerate(row):
             c = t_cron.rows[i].cells[j]
-            set_doc_cell_bg(c, bg)
             set_doc_cell_margins(c)
             p = c.paragraphs[0]
-            r = p.add_run(val)
+            p.alignment = WD_ALIGN_PARAGRAPH.LEFT
+            r = p.add_run(limpiar_guiones_guion(val))
+            r.font.name = "Arial"
+            r.font.size = DocPt(12)
+            r.font.color.rgb = BLACK_DOC
             if j == 0:
                 r.font.bold = True
 
-    h2 = doc.add_heading("2. Guion Conversacional Paso a Paso (Listo para Grabar)", level=1)
-    h2.runs[0].font.color.rgb = DocRGB(15, 23, 42)
+    p_h2 = doc.add_paragraph()
+    p_h2.alignment = WD_ALIGN_PARAGRAPH.LEFT
+    p_h2.paragraph_format.space_before = DocPt(14)
+    p_h2.paragraph_format.space_after = DocPt(6)
+    rh2 = p_h2.add_run("2. Guion Conversacional Paso a Paso (Listo para Grabar)")
+    rh2.font.name = "Arial"
+    rh2.font.size = DocPt(12)
+    rh2.font.bold = True
+    rh2.font.color.rgb = BLACK_DOC
 
     bloques = [
         (
-            "BLOQUE 1 — APERTURA Y PORTADA (00:00 – 00:40) | Diapositiva 1",
+            "BLOQUE 1: APERTURA Y PORTADA (00:00 a 00:40) | Diapositiva 1",
             "Ambos integrantes con cámara encendida y presentación proyectada.",
-            "David Santiago Castelblanco (00:00 – 00:25):",
+            "David Santiago Castelblanco (00:00 a 00:25):",
             "«Buenas tardes, ingeniera Diana Marcela. Mi nombre es David Santiago Castelblanco Artunduaga (código 67001182) y junto con mi compañero Dairo José Narváez Morales (código 67002032) presentamos la sustentación final de nuestro proyecto integrador: Sistema Integrado de Análisis y Calidad de Datos para el Ecosistema Educativo Distrital de Bogotá D.C., en su versión final 2.0, que integra nuestra arquitectura Data Lakehouse por capas con el motor de procesamiento de eventos en tiempo real del Tercer Corte.»\n\n"
-            "Dairo José Narváez (00:25 – 00:40):\n"
+            "Dairo José Narváez (00:25 a 00:40):\n"
             "«Buenas tardes, profesora. A lo largo de esta sustentación mostraremos cómo construimos la solución, qué conceptos de los tres cortes aplicamos, cuál fue el aporte específico de cada uno en el código y en el manual técnico bajo normas APA 7, y realizaremos la demostración funcional en vivo.»"
         ),
         (
-            "BLOQUE 2 — PROBLEMÁTICA, CALIDAD Y MARCO ÉTICO (00:40 – 01:40) | Diapositiva 2",
+            "BLOQUE 2: PROBLEMÁTICA, CALIDAD Y MARCO ÉTICO (00:40 a 01:40) | Diapositiva 2",
             "Cámara de Dairo activa señalando la Diapositiva 2.",
             "Dairo José Narváez:",
             "«Nuestro proyecto parte de una realidad crítica: según el DANE (2025), la pobreza multidimensional en Bogotá subió al 5.4% y el rezago escolar alcanzó el 17.5%, con brechas territoriales severas donde localidades como Usme y Ciudad Bolívar superan el 57% de pobreza monetaria frente al 7.9% en Teusaquillo. Aunque la Secretaría de Educación publica datos abiertos valiosos, al perfilar los 87,520 registros crudos de la capa RAW identificamos cuatro patologías técnicas: primero, silos desconectados entre Saber 11, directorio de colegios, Jóvenes a la E y alertas; segundo, 1,070 registros con valores centinela como guiones o 'N/A' en puntajes numéricos; tercero, 2,934 estudiantes (el 4.2%) sin código DANE institucional; y cuarto, retrasos de red en reportes de colegios periféricos. Además, cumpliendo la Ley 1581 de 2012 de Habeas Data en menores de edad, aplicamos minimización en la capa Gold y anonimización criptográfica SHA-256 en el stream de eventos.»"
         ),
         (
-            "BLOQUE 3 — ARQUITECTURA HÍBRIDA LAKEHOUSE + STREAMING (01:40 – 02:45) | Diapositiva 3",
+            "BLOQUE 3: ARQUITECTURA HÍBRIDA LAKEHOUSE + STREAMING (01:40 a 02:45) | Diapositiva 3",
             "Cámara de David Castelblanco señalando el diagrama de la Figura 1 en la Diapositiva 3.",
             "David Santiago Castelblanco:",
             "«Para resolver este problema aplicamos los conceptos de los tres cortes en una arquitectura híbrida, documentada en la Sección 5 y en la Figura 1 del manual técnico. Del Primer Corte aplicamos la transición de sistemas OLTP a OLAP mediante un Data Lakehouse con Arquitectura Medallón en tres zonas físicas: la capa Bronze (data/RAW/), estrictamente inmutable siguiendo el paradigma ELT; la capa Silver (data/STAGING/), donde se ejecuta el contrato de calidad DAMA-DMBOK; y la capa Gold (data/ANALYTICS/), estructurada como un modelo dimensional en Esquema de Estrella donde la tabla de hechos de Saber 11 se enriquece con las dimensiones de Colegio, Localidad y Programa Social. Y del Tercer Corte integramos una Arquitectura Orientada a Eventos (EDA) que ingiere alertas en formato CloudEvents 1.0, las procesa por Event Time con Watermarks y alimenta tres tipos de ventanas de tiempo y una cola de conciliación DLQ.»"
         ),
         (
-            "BLOQUE 4 — IMPLEMENTACIÓN TÉCNICA BATCH: SILVER Y GOLD (02:45 – 04:00) | Diapositivas 4 y 5",
+            "BLOQUE 4: IMPLEMENTACIÓN TÉCNICA BATCH: SILVER Y GOLD (02:45 a 04:00) | Diapositivas 4 y 5",
             "Intervienen Dairo (Diapositiva 4) y David (Diapositiva 5) explicando los fragmentos de código.",
-            "Dairo José Narváez (02:45 – 03:20 — Diapositiva 4):",
+            "Dairo José Narváez (02:45 a 03:20, Diapositiva 4):",
             "«En la Diapositiva 4 vemos el código del contrato de calidad que implementé en scripts/pipeline_educativo.py. En la función validar_rango_puntaje() definimos VALORES_CENTINELA como un conjunto hash (set), logrando búsquedas en tiempo constante O(1) para convertir los 1,070 textos inválidos en nulos seguros y validar que cada puntaje esté entre 0 y 500. Luego, en limpiar_valores_nulos(), imputamos mediante la moda estadística los 2,934 códigos DANE faltantes, reduciendo los nulos a cero sin descartar estudiantes.»\n\n"
-            "David Santiago Castelblanco (03:20 – 04:00 — Diapositiva 5):\n"
+            "David Santiago Castelblanco (03:20 a 04:00, Diapositiva 5):\n"
             "«En la Diapositiva 5 vemos dos decisiones clave que programé: primero, en crear_spark_session() implementé resiliencia híbrida que verifica con comprobar_java_compatible() si el sistema tiene Java 8; como PySpark 4 requiere Java 17+, el orquestador conmuta automáticamente al motor vectorizado de Pandas sin interrumpir la ejecución. Segundo, en cruzar_saber11_con_directorio() aplicamos un LEFT JOIN contra los 2,262 colegios activos, vinculando 63,498 estudiantes sin perder registros. Al cruzar con la regla de negocio de deserción superior al 8.0%, el sistema identifica automáticamente 9 localidades en alerta crítica, encabezadas por Usme (12.1%) y Fontibón (11.8%).»"
         ),
         (
-            "BLOQUE 5 — TERCER CORTE (PARTE I): EDA, WATERMARKS Y EVENTOS TARDÍOS (04:00 – 05:10) | Diapositiva 6",
+            "BLOQUE 5: TERCER CORTE (PARTE I): EDA, WATERMARKS Y EVENTOS TARDÍOS (04:00 a 05:10) | Diapositiva 6",
             "Cámara de Dairo explicando la Figura 4 y la traza de Watermarks.",
             "Dairo José Narváez:",
             "«Pasando a la implementación funcional del Tercer Corte en scripts/streaming_alertas_educativas.py, construí la clase BrokerEventosEducativos y la lógica de Watermarks, documentadas en la Sección 9.3 y la Figura 4 del manual. Primero, para garantizar idempotencia ante reintentos de red, el broker registra cada ID en un conjunto hash: de los 18 eventos CloudEvents recibidos en el stream JSONL, detecta y bloquea automáticamente el reintento duplicado del evento EVT-004 en Bosa. Segundo, demostramos cuantitativamente por qué no debemos agrupar por Processing Time: en el bloque de 08:00 a 08:10 ocurrieron 8 alertas reales en los colegios (Event Time), pero por retrasos de red el servidor solo vio 6 en Processing Time. Por eso implementamos un Watermark dinámico WM = max(event_time) - 5 minutos y tres políticas de eventos tardíos: el evento EVT-009 de Usme llega 4.3 minutos tarde pero con el Watermark en 08:08, por lo que entra normalmente a su ventana; el EVT-013 llega 12 minutos tarde cuando la ventana ya cerró, pero entra en nuestra holgura de Allowed Lateness (+5 min), reabriendo el estado y emitiendo una versión corregida; y el EVT-017 de un colegio rural en Sumapaz sin enlace satelital llega 28 minutos tarde: mientras Spark haría un Drop descartándolo, nuestro motor lo desvía al tópico Side Output / DLQ para que la Secretaría de Educación nunca pierda la alerta de un estudiante vulnerable.»"
         ),
         (
-            "BLOQUE 6 — TERCER CORTE (PARTE II): VENTANAS TUMBLING, SLIDING Y SESSION (05:10 – 06:05) | Diapositiva 7",
+            "BLOQUE 6: TERCER CORTE (PARTE II): VENTANAS TUMBLING, SLIDING Y SESSION (05:10 a 06:05) | Diapositiva 7",
             "Cámara de David explicando los 3 tipos de ventanas y el código PySpark.",
             "David Santiago Castelblanco:",
             "«En la Diapositiva 7 vemos los tres operadores de ventanas de tiempo que implementé sobre ese flujo y su equivalencia en PySpark Structured Streaming, documentados en la Tabla 10 del manual. Primero, las Tumbling Windows de 10 minutos sin traslape consolidan el reporte oficial periódico con costo de 1 ventana por evento en memoria. Segundo, las Sliding Windows de 10 minutos que avanzan cada 2 minutos (donde cada evento cae en 10 dividido 2 igual a 5 ventanas) nos permitieron detectar una ráfaga crítica de 3 alertas en Bosa en el intervalo [08:02, 08:12), la cual pasaba desapercibida en la ventana Tumbling porque dos eventos caían antes de las 08:10 y el tercero a las 08:11. Y tercero, las Session Windows con brecha de inactividad (gap) de 4 minutos por código DANE agruparon dinámicamente las sesiones activas de cada orientador escolar, separando en el colegio de Ciudad Bolívar una primera sesión continua de 7.08 minutos con 3 alertas y una segunda sesión independiente a las 08:29.»"
         ),
         (
-            "BLOQUE 7 — IDENTIFICACIÓN ARGUMENTADA DE APORTES INDIVIDUALES (06:05 – 06:45) | Diapositiva 8",
+            "BLOQUE 7: IDENTIFICACIÓN ARGUMENTADA DE APORTES INDIVIDUALES (06:05 a 06:45) | Diapositiva 8",
             "Ambos integrantes sintetizan su matriz de aportes de la Sección 10 del manual.",
-            "David Santiago Castelblanco (06:05 – 06:25):",
+            "David Santiago Castelblanco (06:05 a 06:25):",
             "«Como se detalla en la Sección 10 y la Tabla 12 del manual técnico: mi aporte se centró en la arquitectura Lakehouse, la resiliencia híbrida PySpark/Pandas, el cruce LEFT JOIN, la consolidación del reporte de equidad en la capa Gold, la programación de las ventanas Tumbling, Sliding y Session del Corte 3 y el script de figuras APA 7.»\n\n"
-            "Dairo José Narváez (06:25 – 06:45):\n"
+            "Dairo José Narváez (06:25 a 06:45):\n"
             "«Por mi parte, desarrollé el generador reproducible de la capa RAW, el contrato de limpieza e imputación por moda en la capa Silver, la regla automática de alertas de deserción y absorción IES, el broker EDA idempotente con anonimización SHA-256, el cálculo de Watermarks con desvío a la cola DLQ y el manual de usuario en la Sección 11.»"
         ),
         (
-            "BLOQUE 8 — DEMOSTRACIÓN FUNCIONAL EN VIVO Y CIERRE (06:45 – 08:00) | Terminal + Diapositivas 9 y 10",
+            "BLOQUE 8: DEMOSTRACIÓN FUNCIONAL EN VIVO Y CIERRE (06:45 a 08:00) | Terminal + Diapositivas 9 y 10",
             "Se comparte la ventana de PowerShell en la carpeta Proyecto-ING-DATO y se ejecuta el comando en vivo.",
-            "Demostración Conjunta (David ejecuta y comenta Etapas 1–4; Dairo comenta Etapas 5–6 y archivos CSV):",
+            "Demostración Conjunta (David ejecuta y comenta Etapas 1 a 4; Dairo comenta Etapas 5 a 6 y archivos CSV):",
             "1. Ejecutar en vivo en la terminal: python scripts/pipeline_educativo.py\n"
             "2. Señalar en consola la Etapa 1 (70,000 registros Saber 11 y diagnóstico de 2,934 nulos en DANE) y la Etapa 2 (1,070 centinelas filtrados e imputación por moda dejando 0 nulos en data/STAGING/).\n"
             "3. Señalar las Etapas 3, 4 y 5 (las 9 localidades con ALERTA CRÍTICA > 8.0%, el LEFT JOIN de 63,498 estudiantes vinculados y la tabla de equidad en data/ANALYTICS/).\n"
@@ -927,44 +964,65 @@ def construir_guion_docx():
     for titulo_b, escena, orador, parlamento in bloques:
         tbl = doc.add_table(rows=2, cols=1)
         tbl.alignment = WD_TABLE_ALIGNMENT.CENTER
+        set_full_black_borders(tbl)
         c0 = tbl.rows[0].cells[0]
-        set_doc_cell_bg(c0, "1E293B")
         set_doc_cell_margins(c0, top=70, bottom=70, left=120, right=120)
         p0 = c0.paragraphs[0]
-        r0 = p0.add_run(f"{titulo_b}\n🎬 Indicación visual: {escena}")
+        p0.alignment = WD_ALIGN_PARAGRAPH.LEFT
+        r0 = p0.add_run(limpiar_guiones_guion(f"{titulo_b}\nIndicación visual: {escena}"))
+        r0.font.name = "Arial"
         r0.font.bold = True
-        r0.font.size = DocPt(9.5)
-        r0.font.color.rgb = DocRGB(255, 255, 255)
+        r0.font.size = DocPt(12)
+        r0.font.color.rgb = BLACK_DOC
 
         c1 = tbl.rows[1].cells[0]
-        set_doc_cell_bg(c1, "F8FAFC")
         set_doc_cell_margins(c1, top=90, bottom=90, left=120, right=120)
         p1 = c1.paragraphs[0]
-        ro = p1.add_run(orador + "\n")
+        p1.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
+        p1.paragraph_format.line_spacing = 1.5
+        ro = p1.add_run(limpiar_guiones_guion(orador) + "\n")
+        ro.font.name = "Arial"
+        ro.font.size = DocPt(12)
         ro.font.bold = True
-        ro.font.color.rgb = DocRGB(37, 99, 235)
-        rp = p1.add_run(parlamento)
-        rp.font.size = DocPt(10)
+        ro.font.color.rgb = BLACK_DOC
+        rp = p1.add_run(limpiar_guiones_guion(parlamento))
+        rp.font.name = "Arial"
+        rp.font.size = DocPt(12)
+        rp.font.color.rgb = BLACK_DOC
 
         doc.add_paragraph()
 
-    h3 = doc.add_heading("3. Lista de Verificación Final antes de Enviar (Checklist)", level=1)
-    h3.runs[0].font.color.rgb = DocRGB(15, 23, 42)
+    p_h3 = doc.add_paragraph()
+    p_h3.alignment = WD_ALIGN_PARAGRAPH.LEFT
+    p_h3.paragraph_format.space_before = DocPt(12)
+    p_h3.paragraph_format.space_after = DocPt(6)
+    rh3 = p_h3.add_run("3. Lista de Verificación Final antes de Enviar (Checklist)")
+    rh3.font.name = "Arial"
+    rh3.font.size = DocPt(12)
+    rh3.font.bold = True
+    rh3.font.color.rgb = BLACK_DOC
+
     checks = [
-        "☑ Ambos integrantes (David Santiago Castelblanco y Dairo José Narváez) aparecen en cámara durante el video.",
-        "☑ El video dura entre 5 y 10 minutos (este guion está calibrado exactamente en 8 minutos).",
-        "☑ Se utiliza la presentación de apoyo (Presentacion_Sustentacion_Entrega_Final.pptx o el HTML interactivo) y se ejecuta el pipeline en vivo.",
-        "☑ Al subir el video a YouTube, configurar la visibilidad como PÚBLICA (no Oculto ni Privado).",
-        "☑ Copiar el enlace de YouTube y pegarlo en el recuadro amarillo de la Página 2 de 'Documento Integrado del Proyecto.docx'.",
+        "1. Ambos integrantes (David Santiago Castelblanco y Dairo José Narváez) aparecen en cámara durante el video.",
+        "2. El video dura entre 5 y 10 minutos (este guion está calibrado exactamente en 8 minutos).",
+        "3. Se utiliza la presentación de apoyo (Presentacion_Sustentacion_Entrega_Final.pptx o el HTML interactivo) y se ejecuta el pipeline en vivo.",
+        "4. Al subir el video a YouTube, configurar la visibilidad como PÚBLICA (no Oculto ni Privado).",
+        "5. Copiar el enlace de YouTube y pegarlo en la tabla de la Página 2 de 'Documento Integrado del Proyecto.docx'.",
     ]
     for ch in checks:
-        p = doc.add_paragraph(ch)
+        p = doc.add_paragraph()
+        p.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
+        p.paragraph_format.line_spacing = 1.5
         p.paragraph_format.space_after = DocPt(4)
+        rc = p.add_run(limpiar_guiones_guion(ch))
+        rc.font.name = "Arial"
+        rc.font.size = DocPt(12)
+        rc.font.color.rgb = BLACK_DOC
 
     for d in DEST_DIRS:
         out_doc = os.path.join(d, "Guion_Video_Sustentacion_Entrega_Final.docx")
         doc.save(out_doc)
-        print("✅ Guion de sustentación guardado en:", out_doc)
+        print("Guion de sustentación guardado en:", out_doc)
 
 
 if __name__ == "__main__":
